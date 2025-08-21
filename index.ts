@@ -6,6 +6,7 @@ import { connectDB } from "./config/db";
 import uploadRouter from "./routes/route.upload";
 import trashRouter from "./routes/route.trash";
 import starredRouter from "./routes/route.starred";
+import shareRouter from "./routes/route.share";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use((req, _res, next) => {
 app.use("/auth", authRouter);
 app.use("/upload", uploadRouter);
 app.use("/starred", starredRouter);
+app.use("/share", shareRouter);
 app.use("/trash", trashRouter);
 
 app.get("/", (_req, res) => {

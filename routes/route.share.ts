@@ -9,7 +9,7 @@ import {
 const shareRouter = express.Router();
 
 shareRouter.get("/", protectRoute, getShareLinks);
-shareRouter.get("/:id", protectRoute, getShareLink);
+shareRouter.get("/:id", getShareLink);
 shareRouter.post("/:id", protectRoute, shareLink);
 
 export default shareRouter;

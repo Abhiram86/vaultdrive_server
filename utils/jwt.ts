@@ -1,5 +1,4 @@
 import { jwtVerify, SignJWT } from "jose";
-import { shareLink } from "../handlers/handler.share";
 
 export const generateAuthToken = async (
   userId: string,
@@ -52,7 +51,7 @@ export const decodeShareLinkToken = async (token: string) => {
   try {
     const secret = new TextEncoder().encode(process.env.JWT_SHARE_LINK_SECRET);
     const { payload } = await jwtVerify(token, secret);
-    return payload;
+    return payload as { shareLinkId: string };
   } catch (error) {
     console.error(error);
     return null;

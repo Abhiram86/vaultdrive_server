@@ -4,9 +4,12 @@ import UserShare from "../models/UserShare";
 import type { Request, Response } from "express";
 import User from "../models/User";
 import MyFile from "../models/File";
-import { decodeShareLinkToken, generateShareLinkToken } from "../utils/jwt";
+import {
+  decodeShareLinkToken,
+  generateShareLinkToken,
+  verifyAuthToken,
+} from "../utils/jwt";
 import { bucketId, storage } from "../config/storage";
-import { ImageFormat, ImageGravity } from "node-appwrite";
 
 export async function getShareLinks(req: Request, res: Response) {
   try {
@@ -39,52 +42,65 @@ export async function getShareLink(req: Request, res: Response) {
     const shareLink = await ShareLink.findById(decoded?.shareLinkId).populate(
       "file"
     );
+
     if (!shareLink) {
       return res
         .status(404)
         .json({ data: null, error: "Share link not found" });
     }
-    if (!(req as any).userId) {
-      if (!shareLink.isPublic) {
-        return res.status(401).json({ data: null, error: "Unauthorized" });
-      }
+
+    const previewFile = await storage.getFileView(
+      bucketId, // bucketId
+      (shareLink.file as any).appwriteId // fileId
+    );
+
+    const base64file = Buffer.from(previewFile).toString("base64");
+
+    // ✅ Case 1: Public link → always accessible
+    if (shareLink.isPublic) {
+      return res.json({
+        data: {
+          id: shareLink._id,
+          fileName: (shareLink.file as any).name,
+          fileType: (shareLink.file as any).type,
+          previewFile: base64file,
+        },
+        error: null,
+      });
     }
-    const user = await User.findById((req as any).userId as string);
+
+    // ✅ Case 2: Private link → requires authentication
+    if (!req.cookies.accessToken) {
+      return res.status(401).json({ data: null, error: "Unauthorized" });
+    }
+
+    const authToken = await verifyAuthToken(req.cookies.accessToken, "access");
+    if (!authToken) {
+      return res.status(401).json({ data: null, error: "Unauthorized" });
+    }
+
+    const user = await User.findById(authToken.userId);
     if (!user) {
       return res.status(404).json({ data: null, error: "User not found" });
     }
-    if (!shareLink.allowedEmails.includes(user.email) || !shareLink.isPublic) {
+
+    // Only allow if email is in allowedEmails
+    if (!shareLink.allowedEmails.includes(user.email)) {
       return res.status(401).json({ data: null, error: "Access denied" });
     }
-
-    const previewUrl = await storage.getFilePreview(
-      bucketId,
-      (shareLink.file as any).appwriteId,
-      0,
-      0,
-      ImageGravity.Center,
-      100,
-      0,
-      "",
-      5,
-      100,
-      0,
-      "",
-      ImageFormat.Webp
-    );
 
     return res.status(200).json({
       data: {
         id: shareLink._id,
         fileName: (shareLink.file as any).name,
         fileType: (shareLink.file as any).type,
-        previewUrl,
+        previewFile: base64file,
       },
       error: null,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ data: null, error: "Unauthorized" });
+    return res.status(500).json({ data: null, error: "Internal server error" });
   }
 }
 

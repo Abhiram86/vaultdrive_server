@@ -1,4 +1,5 @@
 import { jwtVerify, SignJWT } from "jose";
+import { shareLink } from "../handlers/handler.share";
 
 export const generateAuthToken = async (
   userId: string,
@@ -27,6 +28,29 @@ export const verifyAuthToken = async (
         ? process.env.JWT_ACCESS_SECRET
         : process.env.JWT_REFRESH_SECRET
     );
+    const { payload } = await jwtVerify(token, secret);
+    return payload;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
+export const generateShareLinkToken = async (
+  shareLinkId: string,
+  exp?: string
+) => {
+  const secret = new TextEncoder().encode(process.env.JWT_SHARE_LINK_SECRET);
+  const jwt = new SignJWT({ shareLinkId }).setProtectedHeader({ alg: "HS256" });
+  if (exp) {
+    jwt.setExpirationTime(exp);
+  }
+  return await jwt.sign(secret);
+};
+
+export const decodeShareLinkToken = async (token: string) => {
+  try {
+    const secret = new TextEncoder().encode(process.env.JWT_SHARE_LINK_SECRET);
     const { payload } = await jwtVerify(token, secret);
     return payload;
   } catch (error) {

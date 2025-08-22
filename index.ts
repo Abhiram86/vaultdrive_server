@@ -36,10 +36,6 @@ app.get("/", (_req, res) => {
   res.send("Hello World!");
 });
 
-if (process.env.NODE_ENV !== "production") {
-  app.listen(8080, () => {
-    console.log("Server listening on http://localhost:8080");
-  });
-}
-
-export default app;
+app.listen(8080, () => {
+  console.log("Server listening on http://localhost:8080");
+});

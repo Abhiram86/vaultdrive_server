@@ -78,7 +78,8 @@ export async function login(req: Request, res: Response) {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
-    res.cookie("accessToken", token, {
+    const accessToken = await generateAuthToken(user._id.toString(), "access");
+    res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
@@ -164,4 +165,20 @@ export async function user(req: Request, res: Response) {
     console.error(error);
     return res.status(500).json({ error: "Internal server error" });
   }
+}
+
+export async function logout(req: Request, res: Response) {
+  res.cookie("refreshToken", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 0,
+  });
+  res.cookie("accessToken", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 0,
+  });
+  return res.status(200).json({ message: "Logout successful" });
 }

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { z } from "zod";
 import MyFile from "../models/File";
 import { storage, bucketId } from "../config/storage";
+//@ts-expect-error
 import { InputFile } from "node-appwrite/file";
 import type { Request, Response } from "express";
 import Trash from "../models/Trash";

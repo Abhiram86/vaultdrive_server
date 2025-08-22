@@ -16,7 +16,7 @@
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["**/*.ts", "**/*.js"],
+  "include": ["**/*.ts", "**/*.js", "fix_esm.cjs"],
   "exclude": ["node_modules", "dist"],
   "ts-node": {
     "esm": true

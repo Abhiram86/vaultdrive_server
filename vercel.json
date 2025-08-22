@@ -3,7 +3,6 @@
   "builds": [
     {
       "src": "index.ts",
-      "use": "@vercel/bun",
       "config": {
         "includeFiles": ["./**"]
       }

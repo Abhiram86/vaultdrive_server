@@ -5,6 +5,8 @@ import { storage, bucketId } from "../config/storage";
 import { InputFile } from "node-appwrite/file";
 import type { Request, Response } from "express";
 import Trash from "../models/Trash";
+import ShareLink from "../models/ShareLink";
+import UserShare from "../models/UserShare";
 
 export async function getFiles(req: Request, res: Response) {
   try {
@@ -78,12 +80,14 @@ export async function uploadFile(req: Request, res: Response) {
 
 export const deleteFile = async (req: Request, res: Response) => {
   try {
-    const file = await MyFile.findById(req.params.id);
+    const file = await Trash.findById(req.params.id);
     if (!file) {
       return res.status(404).json({ data: null, error: "File not found" });
     }
     await storage.deleteFile(bucketId, file.appwriteId!);
-    await MyFile.findByIdAndDelete(file._id);
+    await Trash.findByIdAndDelete(file._id);
+    await ShareLink.deleteMany({ file: file._id });
+    await UserShare.deleteMany({ file: file._id });
     return res
       .status(200)
       .json({ data: { message: "File deleted successfully" }, error: null });

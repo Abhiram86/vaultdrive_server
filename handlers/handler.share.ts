@@ -151,3 +151,26 @@ export async function shareLink(req: Request, res: Response) {
     return res.status(500).json({ data: null, error: error });
   }
 }
+
+export async function revokeShareLink(req: Request, res: Response) {
+  try {
+    const shareLink = await ShareLink.findOne({
+      file: req.params.id,
+      owner: (req as any).userId as string,
+    });
+    if (!shareLink) {
+      return res
+        .status(404)
+        .json({ data: null, error: "Share link not found" });
+    }
+    await ShareLink.findByIdAndDelete(shareLink._id);
+    await UserShare.deleteMany({
+      file: req.params.id,
+      grantedBy: (req as any).userId as string,
+    });
+    return res.status(200).json({ data: null, error: null });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ data: null, error: String(error) });
+  }
+}

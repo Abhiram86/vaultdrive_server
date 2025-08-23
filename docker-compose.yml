@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  vaultdrive_server:
+    image: localhost/vaultdrive_server:latest
+    container_name: vaultdrive_server
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped

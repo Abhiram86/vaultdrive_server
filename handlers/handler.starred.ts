@@ -8,9 +8,10 @@ export async function getStarred(req: Request, res: Response) {
     const starred = await Starred.find({
       owner: new mongoose.Types.ObjectId((req as any).userId as string),
     }).populate("file");
-    return res
-      .status(200)
-      .json({ data: starred.map((s) => s.file), error: null });
+    const validStarredFiles = starred
+      .filter((s) => s.file && !(s.file as any).isTrashed)
+      .map((s) => s.file);
+    return res.status(200).json({ data: validStarredFiles, error: null });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ data: null, error: String(error) });

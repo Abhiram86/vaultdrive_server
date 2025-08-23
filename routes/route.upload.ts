@@ -4,8 +4,6 @@ import {
   getFile,
   getFiles,
   uploadFile,
-  deleteFile,
-  moveToTrash,
 } from "../handlers/handler.upload";
 import multer from "multer";
 
@@ -22,7 +20,6 @@ uploadRouter.post("/:id", (_req, res) => {
   res.send("Upload");
 });
 
-uploadRouter.delete("/:id", protectRoute, deleteFile);
-uploadRouter.delete("/trash/:id", protectRoute, moveToTrash);
+
 
 export default uploadRouter;

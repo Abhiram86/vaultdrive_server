@@ -19,13 +19,20 @@ export async function getShareLinks(req: Request, res: Response) {
       return res.status(404).json({ data: null, error: "User not found" });
     }
 
-    const shareLinks = await ShareLink.find({
+    const shareLinksRaw = await ShareLink.find({
       owner: userId,
     }).populate("file");
 
-    const userShares = await UserShare.find({
+    const userSharesRaw = await UserShare.find({
       userEmail: user.email,
     }).populate("file");
+
+    const shareLinks = shareLinksRaw.filter(
+      (link) => link.file && !(link.file as any).isTrashed
+    );
+    const userShares = userSharesRaw.filter(
+      (share) => share.file && !(share.file as any).isTrashed
+    );
 
     return res
       .status(200)

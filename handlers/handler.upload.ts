@@ -5,15 +5,13 @@ import { storage, bucketId } from "../config/storage";
 //@ts-expect-error
 import { InputFile } from "node-appwrite/file";
 import type { Request, Response } from "express";
-import Trash from "../models/Trash";
-import ShareLink from "../models/ShareLink";
-import UserShare from "../models/UserShare";
 
 export async function getFiles(req: Request, res: Response) {
   try {
     const files = await MyFile.find({
       owner: new mongoose.Types.ObjectId((req as any).userId as string),
       parent: null,
+      isTrashed: false,
     });
     return res.status(200).json({ data: files, error: null });
   } catch (error) {
@@ -24,8 +22,11 @@ export async function getFiles(req: Request, res: Response) {
 
 export async function getFile(req: Request, res: Response) {
   try {
-    const file = await MyFile.findById(req.params.id);
-    return res.status(400).json({ data: file, error: null });
+    const file = await MyFile.findOne({ _id: req.params.id, isTrashed: false });
+    if (!file) {
+      return res.status(404).json({ data: null, error: "File not found" });
+    }
+    return res.status(200).json({ data: file, error: null });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ data: null, error: error });
@@ -79,42 +80,4 @@ export async function uploadFile(req: Request, res: Response) {
   }
 }
 
-export const deleteFile = async (req: Request, res: Response) => {
-  try {
-    const file = await Trash.findById(req.params.id);
-    if (!file) {
-      return res.status(404).json({ data: null, error: "File not found" });
-    }
-    await storage.deleteFile(bucketId, file.appwriteId!);
-    await Trash.findByIdAndDelete(file._id);
-    await ShareLink.deleteMany({ file: file._id });
-    await UserShare.deleteMany({ file: file._id });
-    return res
-      .status(200)
-      .json({ data: { message: "File deleted successfully" }, error: null });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ data: null, error: error });
-  }
-};
 
-export const moveToTrash = async (req: Request, res: Response) => {
-  try {
-    const file = await MyFile.findById(req.params.id);
-    if (!file) {
-      return res.status(404).json({ data: null, error: "File not found" });
-    }
-    const fileObj = file.toObject();
-    delete fileObj._id;
-    const newTrashFile = new Trash(fileObj);
-    await newTrashFile.save();
-    await MyFile.findByIdAndDelete(file._id);
-    return res.status(200).json({
-      data: { message: "File moved to trash successfully" },
-      error: null,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ data: null, error: error });
-  }
-};

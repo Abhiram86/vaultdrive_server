@@ -12,6 +12,8 @@ interface MyFileType extends mongoose.Document {
   parent: mongoose.Types.ObjectId | null;
   owner: mongoose.Types.ObjectId;
   publicPermission: "public" | "private";
+  isTrashed: boolean;
+  trashedAt?: Date;
 }
 
 const fileSchema = new mongoose.Schema<MyFileType>({
@@ -34,6 +36,8 @@ const fileSchema = new mongoose.Schema<MyFileType>({
     default: "private",
     enum: ["public", "private"],
   },
+  isTrashed: { type: Boolean, default: false, required: true },
+  trashedAt: { type: Date, required: false },
 });
 
 const MyFile = mongoose.model<MyFileType>("File", fileSchema);
